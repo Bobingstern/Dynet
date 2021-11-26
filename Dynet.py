@@ -5,10 +5,17 @@ from random import randint, choice, random, uniform as randfloat
 from typing import List, Callable
 
 from numpy import tanh
+from numpy import exp
 
 IN = 0
 HIDDEN = 1
 OUT = 2
+
+SIGMOID = 0
+TANH = 1
+
+def sigmoid(x):
+    return 1/(1 + exp(-x))
 
 
 class Connection:
@@ -55,7 +62,7 @@ class Dynet:
     """
     Represents an entire Dynet
     """
-    def __init__(self, inputs, outputs, hiddens=1):
+    def __init__(self, inputs, outputs, hiddens=1, activation=SIGMOID):
         """
         Create an entire Dynet
 
@@ -70,6 +77,13 @@ class Dynet:
         self.hiddens = [Neuron() for _ in range(h)]
         self.outputs = [Neuron() for _ in range(outputs)]
         self.weightRange = 1
+        self.activation = activation
+
+    def activate(self, x):
+        if self.activation == SIGMOID:
+            return sigmoid(x)
+        else:
+            return tanh(x)
 
     def addRandomInputToHiddenConnection(self):
         """
@@ -141,7 +155,7 @@ class Dynet:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value
                 elif conn.layerFrom == HIDDEN:
                     neuron.value += conn.weight * self.hiddens[conn.indexFrom].value
-            neuron.value = tanh(neuron.value)
+            neuron.value = self.activate(neuron.value)
 
     def weightedSumOutputs(self):
         """
@@ -154,7 +168,7 @@ class Dynet:
                     neuron.value += conn.weight * self.hiddens[conn.indexFrom].value
                 elif conn.layerFrom == IN:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value
-            neuron.value = tanh(neuron.value)
+            neuron.value = self.activate(neuron.value)
 
     def mutate(self, rate: float, repeats: int, modifyHiddens=True):
         """

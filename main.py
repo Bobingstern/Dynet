@@ -1,10 +1,10 @@
 from copy import deepcopy
 from typing import List, Any
 from random import random
-
+from Dynet import Dynet, TANH, SIGMOID
 import matplotlib.pyplot as plt  # pip install matplotlib
 
-from Dynet import Dynet
+
 
 PLAYER_COUNT = 100
 TRAIN_GENERATIONS = 300
@@ -26,8 +26,8 @@ BRAIN_MUTATION_CHANCE = 0.2
 # expectedOutput = [1,   0]
 # ---
 # # XOR test case
-# expectedInput = [[0, 0], [1, 0], [0, 1], [1, 1]]
-# expectedOutput = [0,      1,      1,      0]
+expectedInput = [[0, 0], [1, 0], [0, 1], [1, 1]]
+expectedOutput = [0,      1,      1,      0]
 # ---
 # # Reverse XOR test case
 # expectedInput = [[0, 0], [1, 0], [0, 1], [1, 1]]
@@ -88,7 +88,8 @@ class Player:
         """
         Create a player
         """
-        self.brain = Dynet(INPUTS, OUTPUTS, 0)
+        self.brain = Dynet(INPUTS, OUTPUTS, 0, TANH)
+        self.brain.mutate(1, 10)
         self.fitness = 0
 
 
@@ -184,6 +185,7 @@ def main():
     plt.legend()
     plt.grid()
     plt.show()
+    print(error)
 
 if __name__ == "__main__":
     main()
