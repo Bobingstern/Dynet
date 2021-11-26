@@ -1,4 +1,4 @@
-# A Dynamic Neural Network built for Evolution
+# Dynet
 A concept I came up which ditches the idea of "layers" in a neural network.
 
 ### XOR Training
