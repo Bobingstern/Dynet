@@ -62,7 +62,7 @@ class Dynet:
         :param hiddens: The number of hidden neurons
         :param outputs: The number of output neurons
         """
-        self.inputs = [Neuron() for _ in range(inputs)]
+        self.inputs = [Neuron() for _ in range(inputs+1)]
         self.hiddens = [Neuron() for _ in range(hiddens)]
         self.outputs = [Neuron() for _ in range(outputs)]
         self.weightRange = 1
@@ -156,6 +156,8 @@ class Dynet:
         for _ in range(repeats):
             if random() < rate:
                 self.addRandomConnection()
+            if random() < rate/2:
+                self.hiddens.append(Neuron())
     def printNetwork(self, printFunc: Callable = print):
         """
         Print the network.
@@ -186,8 +188,9 @@ class Dynet:
         :param ins: A list of integers
         """
         outputs = []
-        for index, neuron in enumerate(self.inputs):
-            neuron.value = ins[index]
+        for index, i in enumerate(ins):
+            self.inputs[index].value = i
+        self.inputs[len(self.inputs) - 1].value = 1
         self.weightedSumHiddens()
         self.weightedSumOutputs()
         for i in self.outputs:
