@@ -1,4 +1,4 @@
-# HyperDynamicNeuralNetwork
+# Dynet
 A concept I came up which ditches the idea of "layers" in a neural network.
 
 ![A picture of the XOR test's error graph](assets/XOR_.png)
