@@ -37,6 +37,7 @@ class Neuron:
         Creates a single neuron
         """
         self.connections = []
+        self.outGoing = 0
         self.value = 0
 
     def addConnection(self, layerFrom: int, indexFrom: int, weight: float):
@@ -54,7 +55,7 @@ class Dynet:
     """
     Represents an entire Dynet
     """
-    def __init__(self, inputs, outputs, hiddens):
+    def __init__(self, inputs, outputs, hiddens=1):
         """
         Create an entire Dynet
 
@@ -79,6 +80,7 @@ class Dynet:
         self.hiddens[randomHiddenIndex].addConnection(
             IN, randomInputIndex, randfloat(-self.weightRange, self.weightRange)
         )
+        self.inputs[randomInputIndex].outGoing += 1
 
     def addRandomInputToOutputConnection(self):
         """
@@ -89,6 +91,7 @@ class Dynet:
         self.outputs[randomOutputIndex].addConnection(
             IN, randomInputIndex, randfloat(-self.weightRange, self.weightRange)
         )
+        self.inputs[randomInputIndex].outGoing += 1
 
     def addRandomHiddenToHiddenConnection(self):
         """
@@ -99,6 +102,7 @@ class Dynet:
         self.hiddens[randomHiddenIndex2].addConnection(
             HIDDEN, randomHiddenIndex, randfloat(-self.weightRange, self.weightRange)
         )
+        self.hiddens[randomHiddenIndex].outGoing += 1
 
     def addRandomHiddenToOutputConnection(self):
         """
@@ -109,6 +113,7 @@ class Dynet:
         self.outputs[randomOutputIndex].addConnection(
             HIDDEN, randomHiddenIndex, randfloat(-self.weightRange, self.weightRange)
         )
+        self.hiddens[randomHiddenIndex].outGoing += 1
 
     def addRandomConnection(self):
         """
@@ -129,6 +134,8 @@ class Dynet:
         """
         for neuron in self.hiddens:
             neuron.value = 0
+            if neuron.outGoing == 0:
+                break
             for conn in neuron.connections:
                 if conn.layerFrom == IN:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value

@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import List, Any
+from random import random
 
 import matplotlib.pyplot as plt  # pip install matplotlib
 
@@ -33,9 +34,19 @@ BRAIN_MUTATION_CHANCE = 0.2
 # expectedOutput = [1,      0,      0,      1]
 # ---
 # Greater or less
-expectedInput = [[0, 0], [1, 0], [0, 1], [1, 1]]
-expectedOutput = [0.5,    1,      0,      0.5]
+# expectedInput = [[0, 0], [1, 0], [0, 1], [1, 1]]
+# expectedOutput = [[0, 0], [1, 0], [0, 1], [0, 0]]
 # ---
+# 1 to 1
+# expectedInput = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+# expectedOutput = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+# ---
+# 1 to 0
+# expectedInput = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+# expectedOutput = [[1, 1, 1], [0, 1, 1], [1, 0, 1], [1, 1, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 0, 0]]
+# ---
+
+
 # # Greater than case
 # expectedInput = []
 # expectedOutput = []
@@ -77,8 +88,9 @@ class Player:
         """
         Create a player
         """
-        self.brain = Dynet(INPUTS, OUTPUTS, 1)
+        self.brain = Dynet(INPUTS, OUTPUTS, 0)
         self.fitness = 0
+
 
     def evaluate(self, allIns: List[Any], allOuts: List[int], log = False):
         """
@@ -90,11 +102,17 @@ class Player:
         """
         for index, input in enumerate(allIns):
             nnOut = self.brain.feedForward(input)
-            self.fitness -= (nnOut[0] - allOuts[index]) ** 2
+            if len(nnOut) == 1:
+                self.fitness -= (nnOut[0] - allOuts[index]) ** 2
+            else:
+                totalError = 0
+                for i, exp in enumerate(allOuts[index]):
+                    totalError += (nnOut[i]-exp) ** 2
+                self.fitness -= totalError
             if log:
                 print(f"{input}\t"
                       f"Expected: {allOuts[index]}\t"
-                      f"Actual: {nnOut[0]}")
+                      f"Actual: {nnOut}")
 
     def copy(self):
         return deepcopy(self)
