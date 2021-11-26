@@ -62,8 +62,11 @@ class Dynet:
         :param hiddens: The number of hidden neurons
         :param outputs: The number of output neurons
         """
+        h = hiddens
+        if h <= 0:
+            h = 1
         self.inputs = [Neuron() for _ in range(inputs+1)]
-        self.hiddens = [Neuron() for _ in range(hiddens)]
+        self.hiddens = [Neuron() for _ in range(h)]
         self.outputs = [Neuron() for _ in range(outputs)]
         self.weightRange = 1
 
@@ -146,7 +149,7 @@ class Dynet:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value
             neuron.value = tanh(neuron.value)
 
-    def mutate(self, rate: float, repeats: int):
+    def mutate(self, rate: float, repeats: int, modifyHiddens=True):
         """
         Mutate stuff
 
@@ -156,7 +159,7 @@ class Dynet:
         for _ in range(repeats):
             if random() < rate:
                 self.addRandomConnection()
-            if random() < rate/2:
+            if random() < rate / 2 and modifyHiddens:
                 self.hiddens.append(Neuron())
     def printNetwork(self, printFunc: Callable = print):
         """
