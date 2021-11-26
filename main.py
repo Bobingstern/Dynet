@@ -79,20 +79,21 @@ class Player:
         """
         self.brain = Dynet(INPUTS, OUTPUTS, 1)
         self.fitness = 0
-    def evaluate(self, log = False):
+
+    def evaluate(self, allIns: List[Any], allOuts: List[int], log = False):
         """
         Evaluate the player
 
+        :param allIns: A list of expected inputs
+        :param allOuts: A list of expected outputs
         :param log: Whether to print what we were to expect
         """
-        allXorIns = [[0, 0], [1, 0], [0, 1], [1, 1]]
-        correspondingOuts = [0, 1, 1, 0]
-        for index, input in enumerate(allXorIns):
+        for index, input in enumerate(allIns):
             nnOut = self.brain.feedForward(input)
-            self.fitness -= (nnOut[0] - correspondingOuts[index]) ** 2
+            self.fitness -= (nnOut[0] - allOuts[index]) ** 2
             if log:
                 print(f"{input}\t"
-                      f"Expected: {correspondingOuts[index]}\t"
+                      f"Expected: {allOuts[index]}\t"
                       f"Actual: {nnOut[0]}")
 
     def copy(self):
@@ -120,26 +121,41 @@ def main():
     bestEverPlayer = 0
     for g in range(TRAIN_GENERATIONS):
         for player in players:
-            player.evaluate()
+            player.evaluate(expectedInput, expectedOutput)
 
         highest = -9999
         bestIndex = -1
+        beatPrevious = False
+        avgError = 0
+        worstError = 0
         for i, player in enumerate(players):
             avgError += player.fitness
             if player.fitness > highest:
                 highest = player.fitness
                 bestIndex = i
+            if player.fitness < worstError:
+                worstError = player.fitness
             if player.fitness > bestEverFitness:
                 bestEverFitness = player.fitness
                 bestEverPlayer = player.copy()
-                print(f"* New best fitness: {bestEverFitness}")
+                beatPrevious = True
+
+        avgError /= len(players)
+        avgErrors.append(-avgError)
+        error.append(-highest)
+        worstErrors.append(-worstError)
+        gens.append(g)
 
         for player in players:
             player.fitness = 0
             player.brain = players[bestIndex].brain.copy()
             player.brain.mutate(BRAIN_MUTATION_CHANCE, 1)
+        players[0].brain = bestEverPlayer.brain.copy()
 
-        print(f"Generation {g} best fitness: {highest}")
+        if beatPrevious:
+            print(f"* Generation {g} best fitness: {highest}")
+        else:
+            print(f"Generation {g} best fitness: {highest}")
 
     bestEverPlayer.evaluate(expectedInput, expectedOutput, True)
     bestEverPlayer.brain.printNetwork()
