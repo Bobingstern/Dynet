@@ -3,7 +3,7 @@ from typing import List, Any
 from random import random
 from Dynet import Dynet, TANH, SIGMOID
 import matplotlib.pyplot as plt  # pip install matplotlib
-
+from numpy import tanh
 
 
 PLAYER_COUNT = 100
@@ -71,6 +71,15 @@ expectedOutput = [0,      1,      1,      0]
 #     values = [random() for _ in range(1000)]
 #     expectedInput.append(values)
 #     expectedOutput.append(int(sum(values) > 500))
+# ---
+# # Addition
+# expectedInput = []
+# expectedOutput = []
+# for _ in range(20):
+#     values = [random() for _ in range(2)]
+#     expectedInput.append(values)
+#     expectedOutput.append(tanh(sum(values)))
+# ---
 # *** END TEST CASES ***
 
 INPUTS = len(expectedInput[0])

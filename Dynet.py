@@ -7,6 +7,8 @@ from typing import List, Callable
 from numpy import tanh
 from numpy import exp
 
+import time
+
 IN = 0
 HIDDEN = 1
 OUT = 2
@@ -45,7 +47,9 @@ class Neuron:
         """
         self.connections = []
         self.outGoing = 0
+        self.outGoingConnections = []
         self.value = 0
+        self.bias = 0
 
     def addConnection(self, layerFrom: int, indexFrom: int, weight: float):
         """
@@ -73,7 +77,7 @@ class Dynet:
         h = hiddens
         if h <= 0:
             h = 1
-        self.inputs = [Neuron() for _ in range(inputs+1)]
+        self.inputs = [Neuron() for _ in range(inputs)]
         self.hiddens = [Neuron() for _ in range(h)]
         self.outputs = [Neuron() for _ in range(outputs)]
         self.weightRange = 1
@@ -106,6 +110,7 @@ class Dynet:
             IN, randomInputIndex, randfloat(-self.weightRange, self.weightRange)
         )
         self.inputs[randomInputIndex].outGoing += 1
+        self.inputs[randomInputIndex].outGoingConnections.append([OUT, randomOutputIndex, len(self.outputs[randomOutputIndex].connections)-1])
 
     def addRandomHiddenToHiddenConnection(self):
         """
@@ -117,6 +122,7 @@ class Dynet:
             HIDDEN, randomHiddenIndex, randfloat(-self.weightRange, self.weightRange)
         )
         self.hiddens[randomHiddenIndex].outGoing += 1
+        self.hiddens[randomHiddenIndex].outGoingConnections.append([HIDDEN, randomHiddenIndex2, len(self.hiddens[randomHiddenIndex2].connections)-1])
 
     def addRandomHiddenToOutputConnection(self):
         """
@@ -128,6 +134,7 @@ class Dynet:
             HIDDEN, randomHiddenIndex, randfloat(-self.weightRange, self.weightRange)
         )
         self.hiddens[randomHiddenIndex].outGoing += 1
+        self.hiddens[randomHiddenIndex].outGoingConnections.append([OUT, randomOutputIndex, len(self.outputs[randomOutputIndex].connections)-1])
 
     def addRandomConnection(self):
         """
@@ -142,6 +149,37 @@ class Dynet:
         except IndexError:
             pass
 
+    def removeRandomConnectionHiddens(self):
+
+        randomHiddenIndex = randint(0, len(self.hiddens) - 1)
+        if len(self.hiddens[randomHiddenIndex].connections) > 0:
+            randomConnectionIndex = randint(0, len(self.hiddens[randomHiddenIndex].connections)-1)
+            self.hiddens[randomHiddenIndex].connections.pop(randomConnectionIndex)
+    def removeRandomConnectionOutputs(self):
+        randomOutputIndex = randint(0, len(self.outputs) - 1)
+        if len(self.outputs[randomOutputIndex].connections) > 0:
+            randomConnectionIndex = randint(0, len(self.outputs[randomOutputIndex].connections)-1)
+            self.outputs[randomOutputIndex].connections.pop(randomConnectionIndex)
+
+
+    def removeRandomConnection(self):
+        if random() < 0.5:
+            self.removeRandomConnectionHiddens()
+        else:
+            self.removeRandomConnectionOutputs()
+
+    def mutateRandomConnection(self):
+        if random() < 0.5:
+            randomHiddenIndex = randint(0, len(self.hiddens) - 1)
+            if len(self.hiddens[randomHiddenIndex].connections) > 0:
+                rConn = randint(0, len(self.hiddens[randomHiddenIndex].connections)-1)
+                self.hiddens[randomHiddenIndex].connections[rConn].weight+=randfloat(-0.1, 0.1)
+        else:
+            randomOutputIndex = randint(0, len(self.outputs) - 1)
+            if len(self.outputs[randomOutputIndex].connections) > 0:
+                rConn = randint(0, len(self.outputs[randomOutputIndex].connections) - 1)
+                self.outputs[randomOutputIndex].connections[rConn].weight += randfloat(-0.1, 0.1)
+
     def weightedSumHiddens(self):
         """
         Calculates the weighted sum of each hidden neuron and does stuff
@@ -149,12 +187,13 @@ class Dynet:
         for neuron in self.hiddens:
             neuron.value = 0
             if neuron.outGoing == 0:
-                break
+                continue
             for conn in neuron.connections:
                 if conn.layerFrom == IN:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value
                 elif conn.layerFrom == HIDDEN:
                     neuron.value += conn.weight * self.hiddens[conn.indexFrom].value
+            neuron.value += neuron.bias
             neuron.value = self.activate(neuron.value)
 
     def weightedSumOutputs(self):
@@ -170,6 +209,15 @@ class Dynet:
                     neuron.value += conn.weight * self.inputs[conn.indexFrom].value
             neuron.value = self.activate(neuron.value)
 
+
+    def mutateBias(self):
+        if random() < 0.5:
+            r = randint(0, len(self.inputs)-1)
+            self.inputs[r].bias += randfloat(-0.1, 0.1)
+        elif len(self.hiddens) > 0:
+            r = randint(0, len(self.hiddens) - 1)
+            self.hiddens[r].bias += randfloat(-0.1, 0.1)
+
     def mutate(self, rate: float, repeats: int, modifyHiddens=True):
         """
         Mutate stuff
@@ -178,10 +226,16 @@ class Dynet:
         :param repeats: How many times to repeat it
         """
         for _ in range(repeats):
-            if random() < rate:
+            if random() < rate/2:
                 self.addRandomConnection()
-            if random() < rate / 2 and modifyHiddens:
+            if random() < rate:
+                self.mutateRandomConnection()
+            if random() < rate / 4 and modifyHiddens:
                 self.hiddens.append(Neuron())
+            if random() < rate:
+                self.removeRandomConnection()
+            if random() < rate:
+                self.mutateBias()
     def printNetwork(self, printFunc: Callable = print):
         """
         Print the network.
@@ -205,20 +259,23 @@ class Dynet:
         printFunc("")
         printFunc(f"Connection count: {totalCons}")
 
-    def feedForward(self, ins: List[int]) -> List[float]:
+    def feedForward(self, ins: List[int], printTime=False) -> List[float]:
         """
         Feed forward something
 
         :param ins: A list of integers
         """
+        t = time.perf_counter()
         outputs = []
         for index, i in enumerate(ins):
             self.inputs[index].value = i
-        self.inputs[len(self.inputs) - 1].value = 1
         self.weightedSumHiddens()
         self.weightedSumOutputs()
         for i in self.outputs:
             outputs.append(i.value)
+
+        if printTime:
+            print(time.perf_counter()-t)
         return outputs
 
     def copy(self) -> Dynet:
