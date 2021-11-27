@@ -226,13 +226,13 @@ class Dynet:
         :param repeats: How many times to repeat it
         """
         for _ in range(repeats):
-            if random() < rate/2:
+            if random() < rate / 2:
                 self.addRandomConnection()
             if random() < rate:
                 self.mutateRandomConnection()
             if random() < rate / 4 and modifyHiddens:
                 self.hiddens.append(Neuron())
-            if random() < rate:
+            if random() < rate / 2:
                 self.removeRandomConnection()
             if random() < rate:
                 self.mutateBias()
