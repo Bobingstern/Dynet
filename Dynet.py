@@ -212,8 +212,8 @@ class Dynet:
 
     def mutateBias(self):
         if random() < 0.5:
-            r = randint(0, len(self.inputs)-1)
-            self.inputs[r].bias += randfloat(-0.1, 0.1)
+            r = randint(0, len(self.outputs)-1)
+            self.outputs[r].bias += randfloat(-0.1, 0.1)
         elif len(self.hiddens) > 0:
             r = randint(0, len(self.hiddens) - 1)
             self.hiddens[r].bias += randfloat(-0.1, 0.1)

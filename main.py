@@ -7,9 +7,8 @@ from numpy import tanh
 
 
 PLAYER_COUNT = 100
-TRAIN_GENERATIONS = 300
-BRAIN_MUTATION_CHANCE = 0.2
-
+TRAIN_GENERATIONS = 100
+BRAIN_MUTATION_CHANCE = 0.3
 # *** TEST CASES ***
 # Uncomment one to try one out
 # ---
