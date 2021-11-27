@@ -3,8 +3,8 @@ A concept I came up which ditches the idea of "layers" in a neural network.
 
 ### XOR Training
 ![A picture of the XOR test's error graph](assets/XOR_.png)
-### Greater Than or Less Than Test (2 outputs)
-![2 Outputs Test](assets/1to1Mutate.png)
+### Summing 2 numbers
+![2 Outputs Test](assets/Add2NumbersCPP.png)
 ### 1k Inputs to single output
 ![1k Inputs](assets/1kGoL.png)
 ### neat-python vs Dynet
