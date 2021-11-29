@@ -8,7 +8,6 @@
 #include <future>
 #include <vector>
 #include <unistd.h>
-#include<windows.h>
 #include <iostream>
 #include <fstream>
 #include "Dynet.hpp"
