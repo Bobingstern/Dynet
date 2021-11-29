@@ -8,7 +8,6 @@
 #include <future>
 #include <vector>
 #include <unistd.h>
-#include<windows.h>
 
 const float E = 2.7182818284590452353602874;
 
