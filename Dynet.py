@@ -9,6 +9,22 @@ from numpy import exp
 
 import time
 
+# //  _____                _           _   ______
+# // /  __ \              | |         | |  | ___ \
+# // | /  \/_ __ ___  __ _| |_ ___  __| |  | |_/ /_   _
+# // | |   | '__/ _ \/ _` | __/ _ \/ _` |  | ___ \ | | |
+# // | \__/\ | |  __/ (_| | ||  __/ (_| |  | |_/ / |_| |
+# //  \____/_|  \___|\__,_|\__\___|\__,_|  \____/ \__, |
+# //                                               __/ |
+# //                                              |___/
+# //   ___        _ _     ______     _       _
+# //  / _ \      (_) |    | ___ \   | |     | |
+# // / /_\ \_ __  _| | __ | |_/ /_ _| |_ ___| |
+# // |  _  | '_ \| | |/ / |  __/ _` | __/ _ \ |
+# // | | | | | | | |   <  | | | (_| | ||  __/ |
+# // \_| |_/_| |_|_|_|\_\ \_|  \__,_|\__\___|_|
+
+
 IN = 0
 HIDDEN = 1
 OUT = 2
@@ -88,6 +104,10 @@ class Dynet:
             return sigmoid(x)
         else:
             return tanh(x)
+
+    def derivative_activate(self, out):
+        if self.activation == SIGMOID:
+            return out * (1 - out)
 
     def addRandomInputToHiddenConnection(self):
         """
@@ -230,12 +250,84 @@ class Dynet:
                 self.addRandomConnection()
             if random() < rate:
                 self.mutateRandomConnection()
-            if random() < rate / 4 and modifyHiddens:
+            if random() < rate / 20 and modifyHiddens:
                 self.hiddens.append(Neuron())
             if random() < rate / 2:
                 self.removeRandomConnection()
             if random() < rate:
                 self.mutateBias()
+
+    def fullyConnect(self):
+        #Connect all Inputs to all hiddens
+        for index, _ in enumerate(self.inputs):
+            for hidden in self.hiddens:
+                hidden.addConnection(IN, index, randfloat(-self.weightRange, self.weightRange))
+                self.inputs[index].outGoing += 1
+
+        #Connect all hiddens to each other
+        for index, _ in enumerate(self.hiddens):
+            for i, hidden in enumerate(self.hiddens):
+                if i == index:
+                    continue
+                hidden.addConnection(HIDDEN, index, randfloat(-self.weightRange, self.weightRange))
+                self.hiddens[index].outGoing += 1
+
+        #Connect all hiddens to outputs:
+        for index, _ in enumerate(self.hiddens):
+            for output in self.outputs:
+                output.addConnection(HIDDEN, index, randfloat(-self.weightRange, self.weightRange))
+                self.hiddens[index].outGoing+=1
+
+    def backpropagate(self, expected):
+        outputs = []
+        outputErrors = []
+        hiddenOutputError = []
+        hiddenHiddenError = []
+        inputHiddenError = []
+        ##Calculate outputs errors
+        for i in self.outputs:
+            outputs.append(i.value)
+        for index, i in enumerate(outputs):
+            outputErrors.append((i-expected[index]) ** 2)
+
+        ##Calculate hidden to output error
+        for index, output in enumerate(self.outputs):
+            totalError = 0
+            for conIndex, conn in enumerate(output.connections):
+                totalError += (conn.weight * outputErrors[index]) * self.derivative_activate(self.hiddens[conn.indexFrom].value)
+            hiddenOutputError.append(totalError)
+
+        # for index, hidden in enumerate(self.hiddens):
+        #     totalError = 0
+        #     for conIndex, conn in enumerate(hidden.connections):
+        #         if (conn.layerFrom != HIDDEN):
+        #             continue
+        #         totalError += (conn.weight * hiddenOutputError[index]) * self.derivative_activate(self.hiddens[conn.indexFrom].value)
+        #     hiddenHiddenError.append(totalError)
+
+        print(outputErrors, hiddenOutputError)
+
+
+
+    def feedForward(self, ins: List[int], printTime=False) -> List[float]:
+        """
+        Feed forward something
+
+        :param ins: A list of integers
+        """
+        t = time.perf_counter()
+        outputs = []
+        for index, i in enumerate(ins):
+            self.inputs[index].value = i
+        self.weightedSumHiddens()
+        self.weightedSumOutputs()
+        for i in self.outputs:
+            outputs.append(i.value)
+
+        if printTime:
+            print(time.perf_counter()-t)
+        return outputs
+
     def printNetwork(self, printFunc: Callable = print):
         """
         Print the network.
@@ -258,25 +350,6 @@ class Dynet:
             totalCons += len(i.connections)
         printFunc("")
         printFunc(f"Connection count: {totalCons}")
-
-    def feedForward(self, ins: List[int], printTime=False) -> List[float]:
-        """
-        Feed forward something
-
-        :param ins: A list of integers
-        """
-        t = time.perf_counter()
-        outputs = []
-        for index, i in enumerate(ins):
-            self.inputs[index].value = i
-        self.weightedSumHiddens()
-        self.weightedSumOutputs()
-        for i in self.outputs:
-            outputs.append(i.value)
-
-        if printTime:
-            print(time.perf_counter()-t)
-        return outputs
 
     def copy(self) -> Dynet:
         """

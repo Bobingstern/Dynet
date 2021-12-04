@@ -98,6 +98,7 @@ class Player:
         """
         self.brain = Dynet(INPUTS, OUTPUTS, 0, TANH)
         self.brain.mutate(1, 10)
+        #self.brain.fullyConnect()
         self.fitness = 0
 
 
