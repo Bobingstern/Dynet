@@ -1,17 +1,17 @@
-//  _____                _           _   ______
-// /  __ \              | |         | |  | ___ \
-// | /  \/_ __ ___  __ _| |_ ___  __| |  | |_/ /_   _
-// | |   | '__/ _ \/ _` | __/ _ \/ _` |  | ___ \ | | |
-// | \__/\ | |  __/ (_| | ||  __/ (_| |  | |_/ / |_| |
-//  \____/_|  \___|\__,_|\__\___|\__,_|  \____/ \__, |
-//                                               __/ |
-//                                              |___/
-//   ___        _ _     ______     _       _
-//  / _ \      (_) |    | ___ \   | |     | |
-// / /_\ \_ __  _| | __ | |_/ /_ _| |_ ___| |
-// |  _  | '_ \| | |/ / |  __/ _` | __/ _ \ |
-// | | | | | | | |   <  | | | (_| | ||  __/ |
-// \_| |_/_| |_|_|_|\_\ \_|  \__,_|\__\___|_|
+//  _____                _           _   ______        
+// /  __ \              | |         | |  | ___ \       
+// | /  \/_ __ ___  __ _| |_ ___  __| |  | |_/ /_   _  
+// | |   | '__/ _ \/ _` | __/ _ \/ _` |  | ___ \ | | | 
+// | \__/\ | |  __/ (_| | ||  __/ (_| |  | |_/ / |_| | 
+//  \____/_|  \___|\__,_|\__\___|\__,_|  \____/ \__, | 
+//                                               __/ | 
+//                                              |___/  
+//   ___        _ _     ______     _       _           
+//  / _ \      (_) |    | ___ \   | |     | |          
+// / /_\ \_ __  _| | __ | |_/ /_ _| |_ ___| |          
+// |  _  | '_ \| | |/ / |  __/ _` | __/ _ \ |          
+// | | | | | | | |   <  | | | (_| | ||  __/ |          
+// \_| |_/_| |_|_|_|\_\ \_|  \__,_|\__\___|_| 
 
 // Constants
 const IN = 0;
@@ -21,13 +21,20 @@ const OUT = 2;
 // Available activation functions
 const SIGMOID = 0;
 const TANH = 1;
+const RELU = 2
 
 function sigmoid(x) {
   return 1 / (1 + exp(-x));
 }
+function relu(x){
+  return max(0, x)
+}
 
 function randf(lo, hi) {
-  return Math.random() * (hi + 1) + lo;
+  let ran = Math.random()
+  let diff = hi-lo
+  let r = ran * diff
+  return lo+r
 }
 
 function randint(lo, hi) {
@@ -63,7 +70,7 @@ class Connection {
     let c = new Connection(this.layerFrom, this.indexFrom, this.weight);
     return c;
   }
-
+  
 }
 
 // Represents a single neuron
@@ -121,6 +128,9 @@ class Dynet {
     else if (this.activation == TANH) {
       return Math.tanh(x);
     }
+    else if (this.activation == RELU) {
+      return relu(x)
+    }
   }
 
   addRandomInputToHiddenConnection() {
@@ -135,11 +145,11 @@ class Dynet {
   addRandomInputToOutputConnection() {
     let randomInputIndex = randint(0, this.inputs.length - 1);
     let randomOutputIndex = randint(0, this.outputs.length - 1);
-
+    
     this.outputs[randomOutputIndex].addConnection(
       IN, randomInputIndex, randf(-this.weightRange, this.weightRange)
     );
-    this.inputs[randomInputIndex].outGoing += 1;
+    this.inputs[randomInputIndex].outGoing += 1;    
   }
 
   addRandomHiddenToOutputConnection() {
@@ -234,7 +244,7 @@ class Dynet {
       if (this.hiddens[randomHiddenIndex].connections.length > 0) {
         let rConn = randint(0, this.hiddens[randomHiddenIndex].connections.length-1);
         this.hiddens[randomHiddenIndex].connections[rConn].weight += randf(-0.1, 0.1);
-
+        
       }
     } else {
       let randomOutputIndex = randint(0, this.outputs.length-1);
@@ -276,23 +286,7 @@ class Dynet {
         neuron.value = this.activate(neuron.value);
     }
   }
-  fullyConnect(){
-    for (let neuron in this.outputs){
-      for (let n2 in this.hiddens){
-        this.outputs[neuron].addConnection(HIDDEN, n2, randf(-this.weightRange, this.weightRange))
-      }
-    }
-    for (let neuron in this.hiddens){
-      for (let n2 in this.hiddens){
-        this.hiddens[neuron].addConnection(HIDDEN, n2, randf(-this.weightRange, this.weightRange))
-      }
-    }
-    for (let neuron in this.hiddens){
-      for (let n2 in this.inputs){
-        this.hiddens[neuron].addConnection(IN, n2, randf(-this.weightRange, this.weightRange))
-      }
-    }
-  }
+
   mutateBias() {
     if (random() < 0.5) {
       let r = randint(0, this.outputs.length-1);
