@@ -30,11 +30,17 @@ function relu(x){
   return max(0, x)
 }
 
-function randf(lo, hi) {
-  let ran = Math.random()
-  let diff = hi-lo
-  let r = ran * diff
-  return lo+r
+function randf(minimum, maximum) {
+	if (maximum === undefined) {
+		maximum = minimum;
+		minimum = 0;
+	}
+
+	if (typeof minimum !== 'number' || typeof maximum !== 'number') {
+		throw new TypeError('Expected all arguments to be numbers');
+	}
+
+	return (Math.random() * (maximum - minimum)) + minimum;
 }
 
 function randint(lo, hi) {
